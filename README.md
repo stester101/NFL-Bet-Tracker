@@ -6,7 +6,7 @@ Prefilled ticket: Tampa Bay Buccaneers, Buffalo Bills, and Baltimore Ravens. The
 
 ## APK
 
-[Download the current test APK](releases/NFL-Bet-Tracker-latest.apk) directly from this repository.
+[Download version 2](releases/NFL-Bet-Tracker-v2.apk) directly from this repository.
 
 Alternatively, open **Actions → Build APK**, select the latest successful run, and download `NFL-Bet-Tracker-debug`.
 
