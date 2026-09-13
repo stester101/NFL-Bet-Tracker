@@ -15,7 +15,10 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class MainActivity extends Activity {
-    private static final String ESPN="https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?limit=100";
+    private static final String[] ESPN={
+        "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard",
+        "https://site.web.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
+    };
     private static final long INTERVAL=30000;
     private final String[] picks={"Tampa Bay Buccaneers","Buffalo Bills","Baltimore Ravens"};
     private final Handler handler=new Handler(Looper.getMainLooper());
@@ -41,7 +44,23 @@ public class MainActivity extends Activity {
 
     private void refresh(){
         connection.setText("Updating from ESPN…");
-        worker.execute(()->{try{HttpURLConnection c=(HttpURLConnection)new URL(ESPN).openConnection();c.setConnectTimeout(10000);c.setReadTimeout(10000);c.setRequestProperty("User-Agent","NFLBetTracker/1.0");String json;try(InputStream in=c.getInputStream()){json=new String(in.readAllBytes(),StandardCharsets.UTF_8);}JSONObject data=new JSONObject(json);runOnUiThread(()->render(data));}catch(Exception e){runOnUiThread(()->connection.setText("Update failed — showing last result. Tap to retry."));}finally{if(running)handler.postDelayed(this::refresh,INTERVAL);}});
+        worker.execute(()->{String error="No ESPN endpoint responded";boolean ok=false;
+            for(String endpoint:ESPN){try{JSONObject data=download(endpoint);ok=true;runOnUiThread(()->render(data));break;}catch(Exception e){error=e.getClass().getSimpleName()+": "+String.valueOf(e.getMessage());}}
+            if(!ok){final String shown=error;runOnUiThread(()->connection.setText("ESPN update failed\n"+shown+"\nTap REFRESH NOW to retry."));}
+            if(running)handler.postDelayed(this::refresh,INTERVAL);
+        });
+    }
+
+    private JSONObject download(String endpoint)throws Exception{
+        HttpURLConnection c=(HttpURLConnection)new URL(endpoint).openConnection();
+        c.setInstanceFollowRedirects(true);c.setConnectTimeout(15000);c.setReadTimeout(15000);c.setUseCaches(false);
+        c.setRequestProperty("User-Agent","Mozilla/5.0 (Linux; Android 16) AppleWebKit/537.36 Chrome/140 Mobile Safari/537.36");
+        c.setRequestProperty("Accept","application/json,text/plain,*/*");c.setRequestProperty("Accept-Encoding","identity");
+        c.setRequestProperty("Referer","https://www.espn.com/");
+        int code=c.getResponseCode();InputStream stream=code>=200&&code<300?c.getInputStream():c.getErrorStream();
+        String body="";if(stream!=null)try(InputStream in=stream){body=new String(in.readAllBytes(),StandardCharsets.UTF_8);}
+        c.disconnect();if(code<200||code>=300)throw new IOException("HTTP "+code+(body.isEmpty()?"":" — "+body.substring(0,Math.min(80,body.length()))));
+        return new JSONObject(body);
     }
 
     private void render(JSONObject data){
