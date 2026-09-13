@@ -6,7 +6,7 @@ Prefilled ticket: Tampa Bay Buccaneers, Buffalo Bills, and Baltimore Ravens. The
 
 ## APK
 
-[Download HUDDLE v3](releases/HUDDLE-v3.apk) directly from this repository.
+[Download HUDDLE v3.1](releases/HUDDLE-v3.1.apk) directly from this repository.
 
 Alternatively, open **Actions → Build APK**, select the latest successful run, and download `NFL-Bet-Tracker-debug`.
 
